@@ -1,98 +1,53 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Nexora AI - Tic Tac Toe</title>
   <meta name="admverifysite" content="7c9a278e989ad9c45cc1be9484f65019" />
   <style>
-    body {
-      font-family: "Poppins", sans-serif;
-      background: linear-gradient(135deg, #1a1a2e, #16213e);
-      color: #fff;
-      text-align: center;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-    .container { width: 100%; max-width: 400px; }
-    h1 { margin-bottom: 20px; }
-
-    .google-btn {
-      padding: 12px 24px;
-      border: none;
-      border-radius: 8px;
-      background: #4285f4;
-      color: #fff;
-      font-size: 18px;
-      cursor: pointer;
-      transition: 0.3s;
-    }
-    .google-btn:hover { background: #357ae8; }
-
-    .game-board {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-      margin: 20px auto;
-      width: 300px;
-      display: none;
-    }
-    .cell {
-      width: 100px;
-      height: 100px;
-      background: #0f3460;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-size: 40px;
-      font-weight: bold;
-      cursor: pointer;
-      border-radius: 12px;
-      transition: transform 0.2s;
-    }
-    .cell:hover { transform: scale(1.05); }
-
-    .win {
-      background: #21e6c1 !important;
-      animation: glow 1s infinite alternate;
-    }
-    @keyframes glow {
-      from { box-shadow: 0 0 10px #21e6c1; }
-      to { box-shadow: 0 0 30px #21e6c1; }
-    }
-
-    #status { margin-top: 10px; font-size: 18px; }
+    body { font-family: Arial, sans-serif; margin: 0; background: #0f172a; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
+    .hidden { display: none; }
+    .google-btn { background: #4285F4; color: white; padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; font-size: 18px; }
+    #game { display: none; text-align: center; }
+    .board { display: grid; grid-template-columns: repeat(3, 100px); gap: 10px; margin: 20px auto; }
+    .cell { width: 100px; height: 100px; background: #1e293b; display: flex; align-items: center; justify-content: center; font-size: 40px; cursor: pointer; border-radius: 12px; transition: transform 0.2s; }
+    .cell:hover { transform: scale(1.1); background: #334155; }
+    .win { background: #10b981 !important; animation: pulse 0.6s infinite alternate; }
+    @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.1); } }
+    #status { font-size: 20px; margin: 10px; }
+    .mode-btn { padding: 8px 16px; margin: 5px; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; }
+    .player { background: #3b82f6; color: white; }
+    .computer { background: #ef4444; color: white; }
     #ads { margin-top: 20px; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Modern Tic Tac Toe</h1>
 
-    <button id="loginBtn" class="google-btn">Continue with Google</button>
+  <div id="login">
+    <button class="google-btn" onclick="googleLogin()">Continue with Google</button>
+  </div>
 
-    <div id="gameArea" style="display:none;">
-      <div class="game-board" id="board"></div>
-      <p id="status"></p>
+  <div id="game">
+    <h1>Tic Tac Toe</h1>
+    <p id="status">Choose Mode:</p>
+    <button class="mode-btn player" onclick="setMode('player')">2 Players</button>
+    <button class="mode-btn computer" onclick="setMode('computer')">Vs Computer</button>
+    <div class="board" id="board"></div>
+    <button onclick="resetGame()">Restart</button>
+    <div id="ads">
       <!-- BD Ads Network - Ad Display Code -->
-      <div id="ads">
-        <div id="adm-container-1770"></div>
-        <script data-cfasync="false" async type="text/javascript" src="//bdadsnetwork.com/display/items.php?1770&1329&0&0&18&0&0"></script>
-      </div>
+      <div id="adm-container-1770"></div>
+      <script data-cfasync="false" async type="text/javascript" src="https://bdadsnetwork.com/display/items.php?1770&1329&0&0&18&0&0"></script>
       <!-- BD Ads Network - Ad Display Code -->
     </div>
   </div>
 
   <script type="module">
-    // Firebase imports
+    // Firebase
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
-    import { getAuth, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 
-    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyCEJcoBHBxl2UY-1eFURduX3h5M2bAP-Gc",
       authDomain: "nexora-ai-cabb7.firebaseapp.com",
@@ -106,109 +61,99 @@
     const auth = getAuth(app);
     const provider = new GoogleAuthProvider();
 
-    const loginBtn = document.getElementById("loginBtn");
-    const gameArea = document.getElementById("gameArea");
-    const boardElement = document.getElementById("board");
-    const statusElement = document.getElementById("status");
-
-    loginBtn.onclick = async () => {
+    window.googleLogin = async function() {
       try {
         await signInWithPopup(auth, provider);
-        loginBtn.style.display = "none";
-        gameArea.style.display = "block";
-        startGame();
       } catch (err) {
         alert("Login failed: " + err.message);
       }
     };
 
-    // Tic Tac Toe Game
-    let board, currentPlayer, gameOver;
-    const human = "X";
-    const computer = "O";
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        document.getElementById("login").style.display = "none";
+        document.getElementById("game").style.display = "block";
+      } else {
+        document.getElementById("login").style.display = "block";
+        document.getElementById("game").style.display = "none";
+      }
+    });
 
-    function startGame() {
-      board = Array(9).fill(null);
-      currentPlayer = human;
-      gameOver = false;
-      renderBoard();
-      statusElement.textContent = "Your turn!";
-    }
+    // Tic Tac Toe
+    const boardEl = document.getElementById("board");
+    let board = Array(9).fill(null);
+    let currentPlayer = "X";
+    let gameMode = null;
 
     function renderBoard() {
-      boardElement.innerHTML = "";
-      board.forEach((cell, idx) => {
+      boardEl.innerHTML = "";
+      board.forEach((cell, i) => {
         const div = document.createElement("div");
-        div.classList.add("cell");
+        div.className = "cell";
         div.textContent = cell ? cell : "";
-        div.addEventListener("click", () => handleMove(idx));
-        boardElement.appendChild(div);
+        div.onclick = () => makeMove(i);
+        boardEl.appendChild(div);
       });
-      boardElement.style.display = "grid";
     }
 
-    function handleMove(idx) {
-      if (gameOver || board[idx]) return;
-      board[idx] = currentPlayer;
+    function setMode(mode) {
+      gameMode = mode;
+      document.getElementById("status").textContent = "Player X's turn";
+      resetGame();
+    }
+
+    function makeMove(i) {
+      if (board[i] || checkWinner()) return;
+      board[i] = currentPlayer;
       renderBoard();
-      if (checkWin(currentPlayer)) {
-        endGame(currentPlayer + " wins!");
-        highlightWin(checkWin(currentPlayer));
+      if (checkWinner()) {
+        document.getElementById("status").textContent = currentPlayer + " Wins!";
+        highlightWin(checkWinner());
         return;
       }
-      if (board.every(cell => cell)) {
-        endGame("It's a draw!");
-        return;
-      }
-      currentPlayer = currentPlayer === human ? computer : human;
-      if (currentPlayer === computer) {
+      currentPlayer = currentPlayer === "X" ? "O" : "X";
+      document.getElementById("status").textContent = "Player " + currentPlayer + "'s turn";
+
+      if (gameMode === "computer" && currentPlayer === "O") {
         setTimeout(computerMove, 500);
-      } else {
-        statusElement.textContent = "Your turn!";
       }
     }
 
     function computerMove() {
-      let emptyCells = board.map((v,i) => v ? null : i).filter(v => v !== null);
-      let move = emptyCells[Math.floor(Math.random() * emptyCells.length)];
-      board[move] = computer;
-      renderBoard();
-      if (checkWin(computer)) {
-        endGame("Computer wins!");
-        highlightWin(checkWin(computer));
-        return;
-      }
-      if (board.every(cell => cell)) {
-        endGame("It's a draw!");
-        return;
-      }
-      currentPlayer = human;
-      statusElement.textContent = "Your turn!";
+      let emptyCells = board.map((v, i) => v ? null : i).filter(v => v !== null);
+      if (emptyCells.length === 0) return;
+      const choice = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+      makeMove(choice);
     }
 
-    function checkWin(player) {
+    function checkWinner() {
       const wins = [
-        [0,1,2], [3,4,5], [6,7,8],
-        [0,3,6], [1,4,7], [2,5,8],
-        [0,4,8], [2,4,6]
+        [0,1,2],[3,4,5],[6,7,8],
+        [0,3,6],[1,4,7],[2,5,8],
+        [0,4,8],[2,4,6]
       ];
       for (let combo of wins) {
-        if (combo.every(i => board[i] === player)) {
+        const [a,b,c] = combo;
+        if (board[a] && board[a] === board[b] && board[a] === board[c]) {
           return combo;
         }
       }
       return null;
     }
 
-    function highlightWin(combo) {
-      const cells = boardElement.querySelectorAll(".cell");
-      combo.forEach(i => cells[i].classList.add("win"));
+    function highlightWin(cells) {
+      const cellDivs = document.querySelectorAll(".cell");
+      cells.forEach(i => cellDivs[i].classList.add("win"));
     }
 
-    function endGame(message) {
-      gameOver = true;
-      statusElement.textContent = message;
+    function resetGame() {
+      board = Array(9).fill(null);
+      currentPlayer = "X";
+      renderBoard();
+      document.getElementById("status").textContent = "Choose Mode:";
     }
+
+    renderBoard();
   </script>
 </body>
-  </html>
+</html>
