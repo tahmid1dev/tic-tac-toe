@@ -1,55 +1,137 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Nexora AI - Tic Tac Toe</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Nexora – Tic Tac Toe</title>
+
+  <!-- BD Ads Network: site verification MUST be in <head> of the root HTML -->
   <meta name="admverifysite" content="7c9a278e989ad9c45cc1be9484f65019" />
 
   <style>
-    body { font-family: Arial, sans-serif; text-align: center; margin: 0; background: #f4f4f4; }
-    .hidden { display: none; }
-    #login-screen { padding: 60px; }
-    .google-btn { background: #4285F4; color: white; border: none; padding: 12px 24px; font-size: 18px; border-radius: 6px; cursor: pointer; }
-    #profile { margin: 20px auto; padding: 10px; background: white; border-radius: 10px; width: fit-content; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
-    #profile img { border-radius: 50%; width: 60px; height: 60px; }
-    #signout-btn { background: #DB4437; color: white; border: none; padding: 8px 18px; margin-top: 10px; border-radius: 6px; cursor: pointer; }
+    :root{
+      --bg:#0f172a;--card:#111827;--muted:#64748b;--brand:#4f46e5;--accent:#22c55e;--danger:#ef4444;
+      --white:#fff;--shadow:0 10px 25px rgba(0,0,0,.25);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;
+      background: radial-gradient(1200px 800px at 20% -10%, #1f2a44 0%, transparent 60%),
+                  radial-gradient(900px 700px at 120% 10%, #1d2953 0%, transparent 60%),
+                  var(--bg); color:var(--white);
+      min-height:100dvh; display:flex; align-items:center; justify-content:center; padding:28px;
+    }
+    .wrap{width:100%; max-width:760px}
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border:1px solid rgba(255,255,255,.08);
+      backdrop-filter: blur(10px);
+      border-radius:20px; box-shadow:var(--shadow);
+      padding:22px; margin:0 auto 16px; text-align:center;
+    }
+    .title{font-size:28px; font-weight:800; letter-spacing:.3px; margin:8px 0 2px}
+    .muted{color:var(--muted); font-size:14px}
 
-    #game-board { display: grid; grid-template-columns: repeat(3, 100px); gap: 5px; justify-content: center; margin: 20px auto; }
-    .cell { width: 100px; height: 100px; background: white; border-radius: 10px; font-size: 40px; display: flex; justify-content: center; align-items: center; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.3); transition: transform 0.2s; }
-    .cell:hover { transform: scale(1.05); }
-    .win { background: #4CAF50 !important; color: white; animation: flash 0.6s alternate infinite; }
-    @keyframes flash { from { background:#4CAF50; } to { background:#81C784; } }
+    /* Login */
+    .google-btn{
+      background:#4285f4; color:#fff; border:0; padding:12px 22px; border-radius:12px;
+      font-weight:700; font-size:16px; cursor:pointer; box-shadow:var(--shadow);
+      transition:transform .12s ease, filter .12s ease;
+    }
+    .google-btn:hover{ transform: translateY(-1px); filter:brightness(1.05) }
+    .hidden{display:none}
+
+    /* Profile */
+    .profile{display:flex; align-items:center; gap:14px; justify-content:center; flex-wrap:wrap}
+    .avatar{width:64px; height:64px; border-radius:50%; border:3px solid rgba(255,255,255,.2); object-fit:cover}
+    .signout{
+      background:var(--danger); border:0; color:#fff; padding:8px 14px; border-radius:10px;
+      font-weight:700; cursor:pointer; box-shadow:var(--shadow)
+    }
+
+    /* Game */
+    .toolbar{display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin:6px 0 14px}
+    select, button.mode{
+      background:#0b1220; color:#e5e7eb; border:1px solid rgba(255,255,255,.08);
+      padding:8px 12px; border-radius:10px; cursor:pointer; font-weight:600;
+    }
+    .board{
+      display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:14px;
+      width:min(92vw, 420px); margin:14px auto 6px;
+    }
+    .cell{
+      aspect-ratio:1; border-radius:16px; background:#0b1220; border:1px solid rgba(255,255,255,.08);
+      display:flex; align-items:center; justify-content:center; font-weight:900; font-size:46px;
+      color:#e5e7eb; cursor:pointer; box-shadow:var(--shadow); user-select:none;
+      transition:transform .12s ease, background .2s ease;
+    }
+    .cell:hover{ transform: translateY(-2px); background:#101a30 }
+    .cell.disabled{ pointer-events:none; opacity:.85 }
+    .status{margin:8px 0 2px; font-weight:700; letter-spacing:.2px}
+    .sub{color:var(--muted); font-size:13px; margin-bottom:10px}
+    .win{
+      background: linear-gradient(135deg, #0ea5e9 0%, #22c55e 100%) !important;
+      color:#0b1220; animation:pop 300ms ease, glow 1s ease-in-out infinite alternate;
+    }
+    @keyframes pop{ from{ transform:scale(.9) } to{ transform:scale(1) } }
+    @keyframes glow{ from{ box-shadow:0 0 10px #22c55e } to{ box-shadow:0 0 26px #22c55e } }
+
+    /* Ads block area */
+    .ads{margin:18px auto 0; text-align:center}
   </style>
 </head>
 <body>
+  <div class="wrap">
 
-  <!-- Login Screen -->
-  <div id="login-screen">
-    <h1>Welcome to Nexora Tic Tac Toe</h1>
-    <button class="google-btn" onclick="googleLogin()">Continue with Google</button>
+    <!-- Login Card -->
+    <div id="loginCard" class="card">
+      <div class="title">Nexora – Tic Tac Toe</div>
+      <p class="muted">Continue with Google to start playing</p>
+      <button class="google-btn" id="loginBtn">Continue with Google</button>
+    </div>
+
+    <!-- Profile Card -->
+    <div id="profileCard" class="card hidden">
+      <div class="profile">
+        <img id="avatar" class="avatar" alt="avatar" src="">
+        <div>
+          <div id="displayName" style="font-weight:800; font-size:18px"></div>
+          <div id="email" class="muted"></div>
+        </div>
+        <button class="signout" id="signoutBtn">Sign Out</button>
+      </div>
+    </div>
+
+    <!-- Game Card -->
+    <div id="gameCard" class="card hidden">
+      <div class="title" style="margin-bottom:6px">Tic Tac Toe</div>
+      <div class="toolbar">
+        <label class="muted">Mode:</label>
+        <select id="modeSel" title="Game mode">
+          <option value="pvp">Player vs Player</option>
+          <option value="easy">Vs Computer – Easy</option>
+          <option value="hard">Vs Computer – Hard</option>
+        </select>
+        <button class="mode" id="resetBtn">Restart</button>
+      </div>
+      <div id="status" class="status">Player X’s turn</div>
+      <div id="sub" class="sub">Choose a cell to begin</div>
+      <div id="board" class="board"></div>
+    </div>
+
+    <!-- Banner Ad (outside any module script; uses https) -->
+    <div class="ads">
+      <!-- BD Ads Network - Ad Display Code -->
+      <div id="adm-container-1770"></div>
+      <script data-cfasync="false" async type="text/javascript"
+              src="https://bdadsnetwork.com/display/items.php?1770&1329&0&0&18&0&0"></script>
+      <!-- BD Ads Network - Ad Display Code -->
+    </div>
   </div>
 
-  <!-- Profile -->
-  <div id="profile" class="hidden">
-    <img id="user-pic" src="">
-    <h3 id="user-name"></h3>
-    <p id="user-email"></p>
-    <button id="signout-btn" onclick="googleLogout()">Sign Out</button>
-  </div>
-
-  <!-- Game -->
-  <div id="game-screen" class="hidden">
-    <h2>Tic Tac Toe</h2>
-    <p id="status">Player X’s turn</p>
-    <div id="game-board"></div>
-  </div>
-
-  <!-- BD Ads Network -->
-  <div id="adm-container-1770"></div>
-  <script data-cfasync="false" async type="text/javascript" src="//bdadsnetwork.com/display/items.php?1770&1329&0&0&18&0&0"></script>
-
+  <!-- Firebase + App (module) -->
   <script type="module">
+    /* ---------------- Firebase Auth (persistent login) ---------------- */
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
     import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 
@@ -61,101 +143,164 @@
       messagingSenderId: "709302061659",
       appId: "1:709302061659:web:ddab826758da672ded4d7e"
     };
-
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const provider = new GoogleAuthProvider();
 
-    // Login
-    window.googleLogin = async function() {
-      try {
-        await signInWithPopup(auth, provider);
-      } catch (err) {
-        alert("Login failed: " + err.message);
-      }
-    };
+    const $ = (id)=>document.getElementById(id);
+    const loginCard = $("loginCard"), profileCard = $("profileCard"), gameCard = $("gameCard");
+    const loginBtn = $("loginBtn"), signoutBtn = $("signoutBtn");
+    const avatar = $("avatar"), displayName = $("displayName"), email = $("email");
 
-    // Logout
-    window.googleLogout = function() {
-      signOut(auth);
+    loginBtn.onclick = async () => {
+      try { await signInWithPopup(auth, provider); }
+      catch (e) { alert("Login failed: " + e.message); }
     };
+    signoutBtn.onclick = () => signOut(auth);
 
-    // On state change
     onAuthStateChanged(auth, (user) => {
       if (user) {
-        document.getElementById("login-screen").classList.add("hidden");
-        document.getElementById("game-screen").classList.remove("hidden");
-        document.getElementById("profile").classList.remove("hidden");
-
-        document.getElementById("user-pic").src = user.photoURL;
-        document.getElementById("user-name").innerText = user.displayName;
-        document.getElementById("user-email").innerText = user.email;
+        // show UI
+        loginCard.classList.add("hidden");
+        profileCard.classList.remove("hidden");
+        gameCard.classList.remove("hidden");
+        // profile
+        avatar.src = user.photoURL || "";
+        displayName.textContent = user.displayName || "Player";
+        email.textContent = user.email || "";
       } else {
-        document.getElementById("login-screen").classList.remove("hidden");
-        document.getElementById("game-screen").classList.add("hidden");
-        document.getElementById("profile").classList.add("hidden");
+        loginCard.classList.remove("hidden");
+        profileCard.classList.add("hidden");
+        gameCard.classList.add("hidden");
       }
     });
 
-    // Tic Tac Toe
-    const board = document.getElementById("game-board");
-    let cells = [];
-    let currentPlayer = "X";
-    let gameActive = true;
+    /* ---------------- Tic Tac Toe with PvP + Easy/Hard AI ---------------- */
+    const boardEl = $("board");
+    const statusEl = $("status");
+    const subEl = $("sub");
+    const modeSel = $("modeSel");
+    const resetBtn = $("resetBtn");
 
-    function createBoard() {
-      board.innerHTML = "";
-      cells = [];
-      for (let i = 0; i < 9; i++) {
-        const cell = document.createElement("div");
-        cell.classList.add("cell");
-        cell.addEventListener("click", () => cellClick(cell, i));
-        board.appendChild(cell);
-        cells.push("");
+    let board, turn, gameOver;
+
+    const WINS = [
+      [0,1,2],[3,4,5],[6,7,8],
+      [0,3,6],[1,4,7],[2,5,8],
+      [0,4,8],[2,4,6]
+    ];
+
+    function newGame(){
+      board = Array(9).fill(null);
+      turn = "X";
+      gameOver = false;
+      render();
+      statusEl.textContent = "Player X’s turn";
+      subEl.textContent = modeSel.value === "pvp" ? "Two-player mode" :
+                          modeSel.value === "easy" ? "Computer plays random moves" :
+                          "Computer plays smart (minimax)";
+    }
+
+    function render(){
+      boardEl.innerHTML = "";
+      board.forEach((v,i)=>{
+        const c = document.createElement("div");
+        c.className = "cell";
+        if (v){ c.textContent = v; c.classList.add("disabled"); }
+        c.addEventListener("click",()=>onCell(i), { once:true });
+        boardEl.appendChild(c);
+      });
+    }
+
+    function onCell(i){
+      if (gameOver || board[i]) return;
+      place(i, turn);
+
+      const winCombo = getWin(board);
+      if (winCombo){ endGame(turn + " wins!", winCombo); return; }
+      if (isFull(board)){ endGame("It’s a draw!"); return; }
+
+      turn = turn === "X" ? "O" : "X";
+      statusEl.textContent = "Player " + turn + "’s turn";
+
+      // AI moves if needed
+      if (!gameOver && modeSel.value !== "pvp" && turn === "O"){
+        setTimeout(aiMove, 420);
       }
     }
 
-    function cellClick(cell, index) {
-      if (cells[index] !== "" || !gameActive) return;
-      cells[index] = currentPlayer;
-      cell.textContent = currentPlayer;
-
-      if (checkWin()) {
-        document.getElementById("status").innerText = `Player ${currentPlayer} wins!`;
-        gameActive = false;
-        return;
+    function aiMove(){
+      let move;
+      if (modeSel.value === "easy"){
+        const choices = board.map((v,i)=>v?null:i).filter(i=>i!==null);
+        move = choices[Math.floor(Math.random()*choices.length)];
+      } else {
+        // Hard: minimax with small optimizations
+        move = bestMove(board, "O").index;
       }
+      place(move, "O");
 
-      if (!cells.includes("")) {
-        document.getElementById("status").innerText = "Draw!";
-        gameActive = false;
-        return;
-      }
+      const winCombo = getWin(board);
+      if (winCombo){ endGame("Computer wins!", winCombo); return; }
+      if (isFull(board)){ endGame("It’s a draw!"); return; }
 
-      currentPlayer = currentPlayer === "X" ? "O" : "X";
-      document.getElementById("status").innerText = `Player ${currentPlayer}’s turn`;
+      turn = "X";
+      statusEl.textContent = "Player X’s turn";
     }
 
-    function checkWin() {
-      const wins = [
-        [0,1,2],[3,4,5],[6,7,8],
-        [0,3,6],[1,4,7],[2,5,8],
-        [0,4,8],[2,4,6]
-      ];
-      for (let combo of wins) {
-        const [a,b,c] = combo;
-        if (cells[a] && cells[a] === cells[b] && cells[a] === cells[c]) {
-          const allCells = document.querySelectorAll(".cell");
-          allCells[a].classList.add("win");
-          allCells[b].classList.add("win");
-          allCells[c].classList.add("win");
-          return true;
+    function place(i, player){
+      board[i] = player;
+      boardEl.children[i].textContent = player;
+      boardEl.children[i].classList.add("disabled");
+    }
+
+    function getWin(b){
+      for (const combo of WINS){
+        const [a,b1,c] = combo;
+        if (b[a] && b[a]===b[b1] && b[a]===b[c]) return combo;
+      }
+      return null;
+    }
+    const isFull = (b)=> b.every(Boolean);
+
+    function endGame(msg, combo=null){
+      gameOver = true;
+      statusEl.textContent = msg;
+      if (combo){
+        combo.forEach(i=>boardEl.children[i].classList.add("win"));
+      }
+      // disable remaining cells
+      Array.from(boardEl.children).forEach(cell=>cell.classList.add("disabled"));
+    }
+
+    // Minimax (hard AI) with scoring
+    function bestMove(b, player){
+      const opp = player === "O" ? "X" : "O";
+      const win = getWin(b);
+      if (win){ return { score: (b[win[0]]==="O"? +10 : -10) }; }
+      if (isFull(b)){ return { score: 0 }; }
+
+      let best = { score: player==="O" ? -Infinity : Infinity, index:null };
+
+      for (let i=0;i<9;i++){
+        if (b[i]) continue;
+        b[i] = player;
+        const next = bestMove(b, opp);
+        b[i] = null;
+
+        const score = next.score;
+        if (player === "O"){ // maximize
+          if (score > best.score){ best = { score, index:i }; }
+        } else { // minimize
+          if (score < best.score){ best = { score, index:i }; }
         }
       }
-      return false;
+      return best;
     }
 
-    createBoard();
+    resetBtn.onclick = newGame;
+    modeSel.onchange = newGame;
+    newGame();
   </script>
 </body>
 </html>
